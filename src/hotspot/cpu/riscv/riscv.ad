@@ -5128,14 +5128,14 @@ instruct storeIConditional(indirect mem, iRegINoSp oldval, iRegINoSp newval, rFl
 
 // standard CompareAndSwapX when we are using barriers
 // these have higher priority than the rules selected by a predicate
-instruct compareAndSwapB(iRegINoSp res, indirect mem, iRegI_R12 oldval, iRegI_R13 newval,
+instruct compareAndSwapB(iRegINoSp res, indirect mem, iRegINoSp oldval, iRegINoSp newval,
                          iRegI tmp1, iRegI tmp2, iRegI tmp3, rFlagsReg cr)
 %{
   match(Set res (CompareAndSwapB mem (Binary oldval newval)));
 
   ins_cost(LOAD_COST + STORE_COST + ALU_COST * 10 + BRANCH_COST * 4);
 
-  effect(TEMP_DEF res, USE_KILL oldval, USE_KILL newval, TEMP tmp1, TEMP tmp2, TEMP tmp3, KILL cr);
+  effect(TEMP_DEF res, TEMP oldval, TEMP newval, TEMP tmp1, TEMP tmp2, TEMP tmp3, KILL cr);
 
   format %{
     "cmpxchg $mem, $oldval, $newval\t# (byte) if $mem == $oldval then $mem <-- $newval\n\t"
@@ -5151,14 +5151,14 @@ instruct compareAndSwapB(iRegINoSp res, indirect mem, iRegI_R12 oldval, iRegI_R1
   ins_pipe(pipe_slow);
 %}
 
-instruct compareAndSwapS(iRegINoSp res, indirect mem, iRegI_R12 oldval, iRegI_R13 newval,
+instruct compareAndSwapS(iRegINoSp res, indirect mem, iRegINoSp oldval, iRegINoSp newval,
                          iRegI tmp1, iRegI tmp2, iRegI tmp3, rFlagsReg cr)
 %{
   match(Set res (CompareAndSwapS mem (Binary oldval newval)));
 
   ins_cost(LOAD_COST + STORE_COST + ALU_COST * 11 + BRANCH_COST * 4);
 
-  effect(TEMP_DEF res, USE_KILL oldval, USE_KILL newval, TEMP tmp1, TEMP tmp2, TEMP tmp3, KILL cr);
+  effect(TEMP_DEF res, TEMP oldval, TEMP newval, TEMP tmp1, TEMP tmp2, TEMP tmp3, KILL cr);
 
   format %{
     "cmpxchg $mem, $oldval, $newval\t# (short) if $mem == $oldval then $mem <-- $newval\n\t"
@@ -5241,7 +5241,7 @@ instruct compareAndSwapN(iRegINoSp res, indirect mem, iRegNNoSp oldval, iRegNNoS
 %}
 
 // alternative CompareAndSwapX when we are eliding barriers
-instruct compareAndSwapBAcq(iRegINoSp res, indirect mem, iRegI_R12 oldval, iRegI_R13 newval,
+instruct compareAndSwapBAcq(iRegINoSp res, indirect mem, iRegINoSp oldval, iRegINoSp newval,
                             iRegI tmp1, iRegI tmp2, iRegI tmp3, rFlagsReg cr)
 %{
   predicate(needs_acquiring_load_reserved(n));
@@ -5250,7 +5250,7 @@ instruct compareAndSwapBAcq(iRegINoSp res, indirect mem, iRegI_R12 oldval, iRegI
 
   ins_cost(LOAD_COST + STORE_COST + ALU_COST * 10 + BRANCH_COST * 4);
 
-  effect(TEMP_DEF res, KILL cr, USE_KILL oldval, USE_KILL newval, TEMP tmp1, TEMP tmp2, TEMP tmp3);
+  effect(TEMP_DEF res, TEMP oldval, TEMP newval, TEMP tmp1, TEMP tmp2, TEMP tmp3, KILL cr);
 
   format %{
     "cmpxchg_acq $mem, $oldval, $newval\t# (byte) if $mem == $oldval then $mem <-- $newval\n\t"
@@ -5266,7 +5266,7 @@ instruct compareAndSwapBAcq(iRegINoSp res, indirect mem, iRegI_R12 oldval, iRegI
   ins_pipe(pipe_slow);
 %}
 
-instruct compareAndSwapSAcq(iRegINoSp res, indirect mem, iRegI_R12 oldval, iRegI_R13 newval,
+instruct compareAndSwapSAcq(iRegINoSp res, indirect mem, iRegINoSp oldval, iRegINoSp newval,
                             iRegI tmp1, iRegI tmp2, iRegI tmp3, rFlagsReg cr)
 %{
   predicate(needs_acquiring_load_reserved(n));
@@ -5275,7 +5275,7 @@ instruct compareAndSwapSAcq(iRegINoSp res, indirect mem, iRegI_R12 oldval, iRegI
 
   ins_cost(LOAD_COST + STORE_COST + ALU_COST * 11 + BRANCH_COST * 4);
 
-  effect(TEMP_DEF res, KILL cr, USE_KILL oldval, USE_KILL newval, TEMP tmp1, TEMP tmp2, TEMP tmp3);
+  effect(TEMP_DEF res, TEMP oldval, TEMP newval, TEMP tmp1, TEMP tmp2, TEMP tmp3, KILL cr);
 
   format %{
     "cmpxchg_acq $mem, $oldval, $newval\t# (short) if $mem == $oldval then $mem <-- $newval\n\t"
@@ -5369,14 +5369,14 @@ instruct compareAndSwapNAcq(iRegINoSp res, indirect mem, iRegNNoSp oldval, iRegN
 // no trailing StoreLoad barrier emitted by C2.  Unfortunately we
 // can't check the type of memory ordering here, so we always emit a
 // sc_d(w) with rl bit set.
-instruct compareAndExchangeB(iRegINoSp res, indirect mem, iRegI_R12 oldval, iRegI_R13 newval,
+instruct compareAndExchangeB(iRegINoSp res, indirect mem, iRegINoSp oldval, iRegINoSp newval,
                              iRegI tmp1, iRegI tmp2, iRegI tmp3, rFlagsReg cr)
 %{
   match(Set res (CompareAndExchangeB mem (Binary oldval newval)));
 
   ins_cost(LOAD_COST + STORE_COST + BRANCH_COST * 3 + ALU_COST * 5);
 
-  effect(TEMP_DEF res, KILL cr, USE_KILL oldval, USE_KILL newval, TEMP tmp1, TEMP tmp2, TEMP tmp3);
+  effect(TEMP_DEF res, TEMP oldval, TEMP newval, TEMP tmp1, TEMP tmp2, TEMP tmp3, KILL cr);
 
   format %{
     "cmpxchg $res = $mem, $oldval, $newval\t# (byte, weak) if $mem == $oldval then $mem <-- $newval, #@compareAndExchangeB"
@@ -5391,14 +5391,14 @@ instruct compareAndExchangeB(iRegINoSp res, indirect mem, iRegI_R12 oldval, iReg
   ins_pipe(pipe_slow);
 %}
 
-instruct compareAndExchangeS(iRegINoSp res, indirect mem, iRegI_R12 oldval, iRegI_R13 newval,
+instruct compareAndExchangeS(iRegINoSp res, indirect mem, iRegINoSp oldval, iRegINoSp newval,
                              iRegI tmp1, iRegI tmp2, iRegI tmp3, rFlagsReg cr)
 %{
   match(Set res (CompareAndExchangeS mem (Binary oldval newval)));
 
   ins_cost(LOAD_COST + STORE_COST + BRANCH_COST * 3 + ALU_COST * 6);
 
-  effect(TEMP_DEF res, KILL cr, USE_KILL oldval, USE_KILL newval, TEMP tmp1, TEMP tmp2, TEMP tmp3);
+  effect(TEMP_DEF res, TEMP oldval, TEMP newval, TEMP tmp1, TEMP tmp2, TEMP tmp3, KILL cr);
 
   format %{
     "cmpxchg $res = $mem, $oldval, $newval\t# (short, weak) if $mem == $oldval then $mem <-- $newval, #@compareAndExchangeS"
@@ -5494,7 +5494,7 @@ instruct compareAndExchangeP(iRegPNoSp res, indirect mem, iRegP oldval, iRegP ne
   ins_pipe(pipe_slow);
 %}
 
-instruct compareAndExchangeBAcq(iRegINoSp res, indirect mem, iRegI_R12 oldval, iRegI_R13 newval,
+instruct compareAndExchangeBAcq(iRegINoSp res, indirect mem, iRegINoSp oldval, iRegINoSp newval,
                                 iRegI tmp1, iRegI tmp2, iRegI tmp3, rFlagsReg cr)
 %{
   predicate(needs_acquiring_load_reserved(n));
@@ -5503,7 +5503,7 @@ instruct compareAndExchangeBAcq(iRegINoSp res, indirect mem, iRegI_R12 oldval, i
 
   ins_cost(LOAD_COST + STORE_COST + BRANCH_COST * 3 + ALU_COST * 5);
 
-  effect(TEMP_DEF res, KILL cr, USE_KILL oldval, USE_KILL newval, TEMP tmp1, TEMP tmp2, TEMP tmp3);
+  effect(TEMP_DEF res, TEMP oldval, TEMP newval, TEMP tmp1, TEMP tmp2, TEMP tmp3, KILL cr);
 
   format %{
     "cmpxchg_acq $res = $mem, $oldval, $newval\t# (byte, weak) if $mem == $oldval then $mem <-- $newval, #@compareAndExchangeBAcq"
@@ -5518,7 +5518,7 @@ instruct compareAndExchangeBAcq(iRegINoSp res, indirect mem, iRegI_R12 oldval, i
   ins_pipe(pipe_slow);
 %}
 
-instruct compareAndExchangeSAcq(iRegINoSp res, indirect mem, iRegI_R12 oldval, iRegI_R13 newval,
+instruct compareAndExchangeSAcq(iRegINoSp res, indirect mem, iRegINoSp oldval, iRegINoSp newval,
                                 iRegI tmp1, iRegI tmp2, iRegI tmp3, rFlagsReg cr)
 %{
   predicate(needs_acquiring_load_reserved(n));
@@ -5527,7 +5527,7 @@ instruct compareAndExchangeSAcq(iRegINoSp res, indirect mem, iRegI_R12 oldval, i
 
   ins_cost(LOAD_COST + STORE_COST + BRANCH_COST * 3 + ALU_COST * 6);
 
-  effect(TEMP_DEF res, KILL cr, USE_KILL oldval, USE_KILL newval, TEMP tmp1, TEMP tmp2, TEMP tmp3);
+  effect(TEMP_DEF res, TEMP oldval, TEMP newval, TEMP tmp1, TEMP tmp2, TEMP tmp3, KILL cr);
 
   format %{
     "cmpxchg_acq $res = $mem, $oldval, $newval\t# (short, weak) if $mem == $oldval then $mem <-- $newval, #@compareAndExchangeSAcq"
@@ -5630,14 +5630,14 @@ instruct compareAndExchangePAcq(iRegPNoSp res, indirect mem, iRegP oldval, iRegP
   ins_pipe(pipe_slow);
 %}
 
-instruct weakCompareAndSwapB(iRegINoSp res, indirect mem, iRegI_R12 oldval, iRegI_R13 newval,
+instruct weakCompareAndSwapB(iRegINoSp res, indirect mem, iRegINoSp oldval, iRegINoSp newval,
                              iRegI tmp1, iRegI tmp2, iRegI tmp3, rFlagsReg cr)
 %{
   match(Set res (WeakCompareAndSwapB mem (Binary oldval newval)));
 
   ins_cost(LOAD_COST + STORE_COST + BRANCH_COST * 2 + ALU_COST * 6);
 
-  effect(TEMP_DEF res, KILL cr, USE_KILL oldval, USE_KILL newval, TEMP tmp1, TEMP tmp2, TEMP tmp3);
+  effect(TEMP_DEF res, TEMP oldval, TEMP newval, TEMP tmp1, TEMP tmp2, TEMP tmp3, KILL cr);
 
   format %{
     "cmpxchg_weak $mem, $oldval, $newval\t# (byte, weak) if $mem == $oldval then $mem <-- $newval\n\t"
@@ -5654,14 +5654,14 @@ instruct weakCompareAndSwapB(iRegINoSp res, indirect mem, iRegI_R12 oldval, iReg
   ins_pipe(pipe_slow);
 %}
 
-instruct weakCompareAndSwapS(iRegINoSp res, indirect mem, iRegI_R12 oldval, iRegI_R13 newval,
+instruct weakCompareAndSwapS(iRegINoSp res, indirect mem, iRegINoSp oldval, iRegI_R13 newval,
                              iRegI tmp1, iRegI tmp2, iRegI tmp3, rFlagsReg cr)
 %{
   match(Set res (WeakCompareAndSwapS mem (Binary oldval newval)));
 
   ins_cost(LOAD_COST + STORE_COST + BRANCH_COST * 2 + ALU_COST * 7);
 
-  effect(TEMP_DEF res, KILL cr, USE_KILL oldval, USE_KILL newval, TEMP tmp1, TEMP tmp2, TEMP tmp3);
+  effect(TEMP_DEF res, TEMP oldval, TEMP newval, TEMP tmp1, TEMP tmp2, TEMP tmp3, KILL cr);
 
   format %{
     "cmpxchg_weak $mem, $oldval, $newval\t# (short, weak) if $mem == $oldval then $mem <-- $newval\n\t"
@@ -5759,7 +5759,7 @@ instruct weakCompareAndSwapP(iRegINoSp res, indirect mem, iRegP oldval, iRegP ne
   ins_pipe(pipe_slow);
 %}
 
-instruct weakCompareAndSwapBAcq(iRegINoSp res, indirect mem, iRegI_R12 oldval, iRegI_R13 newval,
+instruct weakCompareAndSwapBAcq(iRegINoSp res, indirect mem, iRegINoSp oldval, iRegI_R13 newval,
                                 iRegI tmp1, iRegI tmp2, iRegI tmp3, rFlagsReg cr)
 %{
   predicate(needs_acquiring_load_reserved(n));
@@ -5768,7 +5768,7 @@ instruct weakCompareAndSwapBAcq(iRegINoSp res, indirect mem, iRegI_R12 oldval, i
 
   ins_cost(LOAD_COST + STORE_COST + BRANCH_COST * 2 + ALU_COST * 6);
 
-  effect(TEMP_DEF res, KILL cr, USE_KILL oldval, USE_KILL newval, TEMP tmp1, TEMP tmp2, TEMP tmp3);
+  effect(TEMP_DEF res, TEMP oldval, TEMP newval, TEMP tmp1, TEMP tmp2, TEMP tmp3, KILL cr);
 
   format %{
     "cmpxchg_weak_acq $mem, $oldval, $newval\t# (byte, weak) if $mem == $oldval then $mem <-- $newval\n\t"
@@ -5785,7 +5785,7 @@ instruct weakCompareAndSwapBAcq(iRegINoSp res, indirect mem, iRegI_R12 oldval, i
   ins_pipe(pipe_slow);
 %}
 
-instruct weakCompareAndSwapSAcq(iRegINoSp res, indirect mem, iRegI_R12 oldval, iRegI_R13 newval,
+instruct weakCompareAndSwapSAcq(iRegINoSp res, indirect mem, iRegINoSp oldval, iRegI_R13 newval,
                                 iRegI tmp1, iRegI tmp2, iRegI tmp3, rFlagsReg cr)
 %{
   predicate(needs_acquiring_load_reserved(n));
@@ -5794,7 +5794,7 @@ instruct weakCompareAndSwapSAcq(iRegINoSp res, indirect mem, iRegI_R12 oldval, i
 
   ins_cost(LOAD_COST + STORE_COST + BRANCH_COST * 2 + ALU_COST * 7);
 
-  effect(TEMP_DEF res, KILL cr, USE_KILL oldval, USE_KILL newval, TEMP tmp1, TEMP tmp2, TEMP tmp3);
+  effect(TEMP_DEF res, TEMP oldval, TEMP newval, TEMP tmp1, TEMP tmp2, TEMP tmp3, KILL cr);
 
   format %{
     "cmpxchg_weak_acq $mem, $oldval, $newval\t# (short, weak) if $mem == $oldval then $mem <-- $newval\n\t"
